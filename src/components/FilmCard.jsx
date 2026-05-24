@@ -13,10 +13,10 @@ const badgeColor = (badge) => {
   return "bg-blue-600"
 }
 
-function FilmCard({ film, index }) {
+function FilmCard({ film, index, isWatchlisted, onToggleWatchlist }) {
   return (
     <article
-      className="relative group cursor-pointer rounded-xl overflow-hidden border border-gray-800 hover:border-red-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-red-900/30 bg-gray-900"
+      className="relative group rounded-xl overflow-hidden border border-gray-800 hover:border-red-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-red-900/30 bg-gray-900"
       aria-label={`Film: ${film.title} (${film.year})`}
     >
       {/* Poster */}
@@ -58,9 +58,17 @@ function FilmCard({ film, index }) {
           <span>💬 {film.comments}</span>
           <span>{film.year}</span>
         </div>
-        <span className="mt-2 inline-block text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded">
-          {film.genre}
-        </span>
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <span className="inline-block text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded">
+            {film.genre}
+          </span>
+          <button
+            onClick={() => onToggleWatchlist(film)}
+            className={`text-xs font-semibold px-3 py-1 rounded-full transition ${isWatchlisted ? "bg-red-600 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"}`}
+          >
+            {isWatchlisted ? "❤️ Watchlist" : "+ Watchlist"}
+          </button>
+        </div>
       </div>
     </article>
   )

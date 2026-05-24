@@ -2,7 +2,7 @@
 // Komponen utama — menyatukan semua komponen
 // Menggunakan: useState, Conditional Rendering (tab switching)
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Navbar          from "./components/Navbar"
 import HeroBanner      from "./components/HeroBanner"
 import FilterBar       from "./components/FilterBar"
@@ -21,10 +21,33 @@ function App() {
   const [selectedYear, setSelectedYear]   = useState("All")
   // useState: tab aktif — 'trending' atau 'api'
   const [activeTab, setActiveTab]         = useState("trending")
+  // useState: daftar watchlist film yang tersimpan di localStorage
+  const [watchlist, setWatchlist] = useState(() => {
+    if (typeof window === "undefined") return []
+    try {
+      return JSON.parse(localStorage.getItem("movieflix-watchlist")) ?? []
+    } catch {
+      return []
+    }
+  })
+
+  useEffect(() => {
+    localStorage.setItem("movieflix-watchlist", JSON.stringify(watchlist))
+  }, [watchlist])
 
   const handleSearch = (e) => {
     e?.preventDefault()
     setActiveSearch(searchQuery)
+  }
+
+  const toggleWatchlist = (film) => {
+    setWatchlist((current) => {
+      const exists = current.some((item) => item.id === film.id)
+      if (exists) {
+        return current.filter((item) => item.id !== film.id)
+      }
+      return [...current, film]
+    })
   }
 
   return (
@@ -81,6 +104,8 @@ function App() {
             searchQuery={activeSearch}
             selectedGenre={selectedGenre}
             selectedYear={selectedYear}
+            watchlist={watchlist}
+            onToggleWatchlist={toggleWatchlist}
           />
         ) : (
           <DataList searchQuery={activeSearch} />

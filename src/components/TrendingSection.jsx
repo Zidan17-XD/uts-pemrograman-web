@@ -15,7 +15,7 @@ const TRENDING_FILMS = [
   { id: 8, title: "Sold Out", year: 2026, rating: 9.0, comments: 12, badge: "S1", genre: "Thriller", image: "/assets/movie8.jpg" },
 ]
 
-function TrendingSection({ searchQuery, selectedGenre, selectedYear }) {
+function TrendingSection({ searchQuery, selectedGenre, selectedYear, watchlist, onToggleWatchlist }) {
   const filtered = TRENDING_FILMS.filter((f) => {
     const matchSearch = f.title.toLowerCase().includes(searchQuery.toLowerCase())
     const matchGenre = selectedGenre === "All" || f.genre === selectedGenre
@@ -48,7 +48,13 @@ function TrendingSection({ searchQuery, selectedGenre, selectedYear }) {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {filtered.map((film, i) => (
-            <FilmCard key={film.id} film={film} index={i} />
+            <FilmCard
+              key={film.id}
+              film={film}
+              index={i}
+              isWatchlisted={watchlist.some((item) => item.id === film.id)}
+              onToggleWatchlist={onToggleWatchlist}
+            />
           ))}
         </div>
       )}
