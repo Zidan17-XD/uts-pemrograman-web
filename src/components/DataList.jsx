@@ -10,7 +10,7 @@ const TMDB_BASE_URL = "https://api.themoviedb.org/3"
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w342"
 const TMDB_READ_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhYzAzYjhhZDBiYzI0MjJlMTkxYzI4NzI0ZTAyYmNhOSIsIm5iZiI6MTc3OTg5MTA3NS40MDMsInN1YiI6IjZhMTZmYjgzYzBlOWYwYjRlZDc3OWRjZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.pCPzM--VO2z549m0I-5aPVyiEoD909RO4w7DOBDDzDI"
 
-function DataList({ searchQuery }) {
+function DataList({ searchQuery, watchlist = [], onToggleWatchlist = () => {} }) {
   const [movies, setMovies] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -107,6 +107,7 @@ function DataList({ searchQuery }) {
                       src={`${TMDB_IMAGE_BASE}${movie.poster_path}`}
                       alt={`${movie.title} poster`}
                       className="w-full h-64 object-cover"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="h-64 bg-gray-800 flex items-center justify-center text-4xl text-gray-600">
@@ -122,10 +123,29 @@ function DataList({ searchQuery }) {
                     </h3>
                   </div>
                 </div>
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center justify-between text-xs text-gray-400">
+                  <div className="p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2 text-xs text-gray-400">
                     <span className="bg-gray-800 rounded-full px-2 py-1">★ {movie.vote_average?.toFixed(1) ?? "-"}</span>
                     <span>{movie.genre_ids?.length ? `Genre ID ${movie.genre_ids[0]}` : "Genre: N/A"}</span>
+                    <div className="ml-auto">
+                      {(() => {
+                        const isWatchlisted = watchlist.some((i) => i.id === movie.id)
+                        return (
+                          <button
+                            onClick={() => onToggleWatchlist({
+                              id: movie.id,
+                              title: movie.title,
+                              poster_path: movie.poster_path,
+                              release_date: movie.release_date,
+                              vote_average: movie.vote_average,
+                            })}
+                            className={`text-xs font-semibold px-3 py-1 rounded-full transition ${isWatchlisted ? "bg-red-600 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"}`}
+                          >
+                            {isWatchlisted ? "❤️ Watchlist" : "+ Watchlist"}
+                          </button>
+                        )
+                      })()}
+                    </div>
                   </div>
                   <p className="text-gray-300 text-sm line-clamp-3">
                     {movie.overview || "Tidak ada deskripsi tersedia."}

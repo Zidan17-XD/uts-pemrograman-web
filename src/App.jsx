@@ -41,12 +41,18 @@ function App() {
   }
 
   const toggleWatchlist = (film) => {
+    const item = {
+      id: film.id,
+      title: film.title,
+      poster_path: film.poster_path || film.image || null,
+      release_date: film.release_date || film.year || null,
+      vote_average: film.vote_average ?? film.rating ?? null,
+    }
+
     setWatchlist((current) => {
-      const exists = current.some((item) => item.id === film.id)
-      if (exists) {
-        return current.filter((item) => item.id !== film.id)
-      }
-      return [...current, film]
+      const exists = current.some((i) => i.id === item.id)
+      if (exists) return current.filter((i) => i.id !== item.id)
+      return [...current, item]
     })
   }
 
@@ -108,7 +114,7 @@ function App() {
             onToggleWatchlist={toggleWatchlist}
           />
         ) : (
-          <DataList searchQuery={activeSearch} />
+            <DataList searchQuery={activeSearch} watchlist={watchlist} onToggleWatchlist={toggleWatchlist} />
         )}
       </main>
 
