@@ -1,19 +1,19 @@
 // DataList.jsx
-// Komponen: Mengambil dan menampilkan data dari Public API menggunakan Axios
+// Komponen: Mengambil dan menampilkan data film dari TMDB API menggunakan Axios
 // Menggunakan: useState, useEffect, Axios, LoadingIndicator, Conditional Rendering
 
 import { useState, useEffect } from "react"
 import axios from "axios"
 import LoadingIndicator from "./LoadingIndicator"
 
+const TMDB_BASE_URL = "https://api.themoviedb.org/3"
+const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w342"
+const TMDB_READ_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhYzAzYjhhZDBiYzI0MjJlMTkxYzI4NzI0ZTAyYmNhOSIsIm5iZiI6MTc3OTg5MTA3NS40MDMsInN1YiI6IjZhMTZmYjgzYzBlOWYwYjRlZDc3OWRjZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.pCPzM--VO2z549m0I-5aPVyiEoD909RO4w7DOBDDzDI"
+
 function DataList({ searchQuery }) {
-  // useState: menyimpan data hasil fetch dari API
-  const [posts, setPosts] = useState([])
-  // useState: status loading
+  const [movies, setMovies] = useState([])
   const [loading, setLoading] = useState(true)
-  // useState: pesan error jika fetch gagal
   const [error, setError] = useState(null)
-  // useState: halaman pagination
   const [page, setPage] = useState(1)
 
   // Reset halaman saat query pencarian berubah
@@ -26,17 +26,24 @@ function DataList({ searchQuery }) {
     setLoading(true)
     setError(null)
 
-    const query = `https://jsonplaceholder.typicode.com/posts?_limit=10&_page=${page}${searchQuery ? `&title_like=${encodeURIComponent(searchQuery)}` : ""
-      }`
+    const endpoint = searchQuery
+      ? `${TMDB_BASE_URL}/search/movie?language=id-ID&page=${page}&include_adult=false&query=${encodeURIComponent(searchQuery)}`
+      : `${TMDB_BASE_URL}/movie/popular?language=id-ID&page=${page}`
 
     axios
-      .get(query)
+      .get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${TMDB_READ_ACCESS_TOKEN}`,
+          "Content-Type": "application/json;charset=utf-8",
+        },
+      })
       .then((res) => {
-        setPosts(res.data)
+        setMovies(res.data.results ?? [])
         setLoading(false)
       })
-      .catch(() => {
-        setError("Gagal memuat data. Periksa koneksi internet.")
+      .catch((err) => {
+        console.error(err)
+        setError("Gagal memuat data TMDB. Periksa koneksi atau token/API key.")
         setLoading(false)
       })
   }, [page, searchQuery])
@@ -46,21 +53,23 @@ function DataList({ searchQuery }) {
       aria-labelledby="api-heading"
       className="max-w-7xl mx-auto px-4 pb-12"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h2
-          id="api-heading"
-          className="text-white text-xl font-black"
-        >
-          📡 Data dari API (JSONPlaceholder)
-        </h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+        <div>
+          <h2 id="api-heading" className="text-white text-xl font-black">
+            📡 Data dari API TMDB
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            {searchQuery
+              ? `Hasil pencarian untuk "${searchQuery}"`
+              : "Menampilkan film populer dari TMDB"}
+          </p>
+        </div>
         <span className="text-xs text-gray-500 bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
           via Axios • Halaman {page}
         </span>
       </div>
 
-      {/* Conditional Rendering: tampilkan loading */}
-      {loading && <LoadingIndicator message="Memuat data dari JSONPlaceholder..." />}
+      {loading && <LoadingIndicator message="Memuat data dari TMDB..." />}
 
       {/* Conditional Rendering: tampilkan error */}
       {!loading && error && (
@@ -76,38 +85,56 @@ function DataList({ searchQuery }) {
       )}
 
       {/* Conditional Rendering: tampilkan data jika berhasil */}
-      {!loading && !error && posts.length === 0 && (
+      {!loading && !error && movies.length === 0 && (
         <div className="text-center py-16 text-gray-500">
           <p className="text-lg font-semibold">Tidak ada hasil untuk "{searchQuery}"</p>
           <p className="text-sm mt-1">Coba kata kunci lain atau hapus pencarian</p>
         </div>
       )}
 
-      {!loading && !error && posts.length > 0 && (
+      {!loading && !error && movies.length > 0 && (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {posts.map((post) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {movies.map((movie) => (
               <article
-                key={post.id}
-                className="bg-gray-900 border border-gray-800 hover:border-red-500/50 rounded-xl p-4 transition-all duration-200 hover:shadow-lg hover:shadow-red-900/10 group"
-                aria-label={`Ulasan: ${post.title}`}
+                key={movie.id}
+                className="bg-gray-900 border border-gray-800 hover:border-red-500/50 rounded-3xl overflow-hidden transition-all duration-200 shadow-sm hover:shadow-red-900/10"
+                aria-label={`Film: ${movie.title}`}
               >
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 group-hover:scale-110 transition-transform">
-                    {post.id}
-                  </div>
-                  <div>
-                    <h3 className="text-white font-semibold text-sm capitalize leading-snug mb-1 line-clamp-2 group-hover:text-red-400 transition-colors">
-                      {post.title}
+                <div className="relative">
+                  {movie.poster_path ? (
+                    <img
+                      src={`${TMDB_IMAGE_BASE}${movie.poster_path}`}
+                      alt={`${movie.title} poster`}
+                      className="w-full h-64 object-cover"
+                    />
+                  ) : (
+                    <div className="h-64 bg-gray-800 flex items-center justify-center text-4xl text-gray-600">
+                      🎬
+                    </div>
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-4">
+                    <p className="text-xs uppercase text-gray-400 tracking-wider">
+                      {movie.release_date ? movie.release_date.slice(0, 4) : "TBA"}
+                    </p>
+                    <h3 className="text-white font-bold text-lg leading-snug mt-1">
+                      {movie.title}
                     </h3>
-                    <p className="text-gray-500 text-xs line-clamp-2">{post.body}</p>
                   </div>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs text-gray-400">
+                    <span className="bg-gray-800 rounded-full px-2 py-1">★ {movie.vote_average?.toFixed(1) ?? "-"}</span>
+                    <span>{movie.genre_ids?.length ? `Genre ID ${movie.genre_ids[0]}` : "Genre: N/A"}</span>
+                  </div>
+                  <p className="text-gray-300 text-sm line-clamp-3">
+                    {movie.overview || "Tidak ada deskripsi tersedia."}
+                  </p>
                 </div>
               </article>
             ))}
           </div>
 
-          {/* Pagination */}
           <div className="flex justify-center gap-3 mt-6">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
